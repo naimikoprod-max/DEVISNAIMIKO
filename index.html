@@ -293,7 +293,7 @@ async function doSend(){
   if(btn){btn.disabled=true;btn.textContent='Envoi en cours…';}
   try{
     const lignesText=(S.result?.lignes||[]).map(l=>`${l.label}${l.detail?' ('+l.detail+')':''}: ${l.ht>0?l.ht.toLocaleString('fr-FR')+' € HT':'Inclus'}`).join('\n');
-    await emailjs.send('service_lto1kan','template_6iehg5f',{
+    await emailjs.send('service_lto1kan','template_ybimtex',{
       from_name: S.ct.name,
       from_email: S.ct.email,
       phone: S.ct.phone||'Non renseigné',
