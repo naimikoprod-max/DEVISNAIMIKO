@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Naimiko Prod — Estimation de devis</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script>emailjs.init('Z88KnzbVYGI7EME7X');</script>
+
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0D0D0D; color: #F0F0F0; min-height: 100vh; }
@@ -293,23 +292,30 @@ async function doSend(){
   if(btn){btn.disabled=true;btn.textContent='Envoi en cours…';}
   try{
     const lignesText=(S.result?.lignes||[]).map(l=>`${l.label}${l.detail?' ('+l.detail+')':''}: ${l.ht>0?l.ht.toLocaleString('fr-FR')+' € HT':'Inclus'}`).join('\n');
-    await emailjs.send('service_lto1kan','template_ybimtex',{
-      from_name: S.ct.name,
-      from_email: S.ct.email,
-      phone: S.ct.phone||'Non renseigné',
-      message: S.ct.msg||'Aucun message',
-      project_type: S.ptype,
-      project_desc: S.desc||'Non précisé',
-      total_ttc: S.result?.total_ttc?.toLocaleString('fr-FR')+' € TTC' || 'N/A',
-      fourchette: (S.result?.fourchette_basse?.toLocaleString('fr-FR')||'')+'€ — '+(S.result?.fourchette_haute?.toLocaleString('fr-FR')||'')+'€ TTC',
-      detail_lignes: lignesText,
-      conseil: S.result?.conseil||'',
-      to_email: 'contact@naimiko-prod.com',
+    const res=await fetch('https://formspree.io/f/mojyeynr',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        nom: S.ct.name,
+        email: S.ct.email,
+        telephone: S.ct.phone||'Non renseigné',
+        message: S.ct.msg||'Aucun message',
+        type_projet: S.ptype,
+        description: S.desc||'Non précisé',
+        total_ttc: S.result?.total_ttc?.toLocaleString('fr-FR')+' € TTC',
+        fourchette: (S.result?.fourchette_basse?.toLocaleString('fr-FR')||'')+'€ — '+(S.result?.fourchette_haute?.toLocaleString('fr-FR')||'')+'€ TTC',
+        detail: lignesText,
+        conseil: S.result?.conseil||'',
+      })
     });
-    S.contactSent=true;
-    render();
+    if(res.ok){
+      S.contactSent=true;
+      render();
+    } else {
+      throw new Error('Erreur envoi');
+    }
   }catch(e){
-    alert('Erreur envoi email: '+e.text||e.message);
+    alert('Erreur envoi: '+e.message);
     if(btn){btn.disabled=false;btn.textContent='📩 Envoyer ma demande';}
   }
 }
