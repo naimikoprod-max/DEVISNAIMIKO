@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Naimiko Prod — Estimation de devis</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>emailjs.init('QEBPLfOUohx9VCr8o9Rp-');</script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0D0D0D; color: #F0F0F0; min-height: 100vh; }
@@ -285,7 +287,32 @@ function rResult(c){
   c.innerHTML=`<div class="rcard"><div class="rp-lbl">Estimation pour votre projet</div><div class="rp-main">${fmt(r.total_ttc)} €</div><div class="rp-tva">TTC · dont ${fmt(r.tva)} € de TVA (20%)</div><div class="rp-range">Fourchette : ${fmt(r.fourchette_basse)} — ${fmt(r.fourchette_haute)} € TTC</div></div><div class="rc"><p style="font-size:13px;line-height:1.6">${r.resume}</p></div><div class="rc"><div class="rc-hd">Détail</div>${lines}</div>${r.conseil?`<div class="cons"><div class="cons-l">💡 CONSEIL</div><div class="cons-t">${r.conseil}</div></div>`:''}${cta}<button class="btn-reset" onclick="raz()">← Nouvelle estimation</button>`;
 }
 function rb(){const b=document.getElementById('bsend');if(b)b.disabled=!(S.ct.name&&S.ct.email);}
-function doSend(){if(S.ct.name&&S.ct.email){S.contactSent=true;render();}}
+async function doSend(){
+  if(!S.ct.name||!S.ct.email) return;
+  const btn=document.getElementById('bsend');
+  if(btn){btn.disabled=true;btn.textContent='Envoi en cours…';}
+  try{
+    const lignesText=(S.result?.lignes||[]).map(l=>`${l.label}${l.detail?' ('+l.detail+')':''}: ${l.ht>0?l.ht.toLocaleString('fr-FR')+' € HT':'Inclus'}`).join('\n');
+    await emailjs.send('service_lto1kan','JWSk39hWVcyke1rLO',{
+      from_name: S.ct.name,
+      from_email: S.ct.email,
+      phone: S.ct.phone||'Non renseigné',
+      message: S.ct.msg||'Aucun message',
+      project_type: S.ptype,
+      project_desc: S.desc||'Non précisé',
+      total_ttc: S.result?.total_ttc?.toLocaleString('fr-FR')+' € TTC' || 'N/A',
+      fourchette: (S.result?.fourchette_basse?.toLocaleString('fr-FR')||'')+'€ — '+(S.result?.fourchette_haute?.toLocaleString('fr-FR')||'')+'€ TTC',
+      detail_lignes: lignesText,
+      conseil: S.result?.conseil||'',
+      to_email: 'contact@naimiko-prod.com',
+    });
+    S.contactSent=true;
+    render();
+  }catch(e){
+    alert('Erreur envoi email: '+e.text||e.message);
+    if(btn){btn.disabled=false;btn.textContent='📩 Envoyer ma demande';}
+  }
+}
 function raz(){S={step:1,ptype:'',desc:'',shootId:'',capType:'',livrable:'',preparation:'',finition:'',soustitres:false,drone:false,photo:false,photoH:'2',photoDur:'2',photoStyle:'',dist:'local',deliv:[],result:null,contactSent:false,loading:false,ct:{name:'',email:'',phone:'',msg:''}};render();}
 render();
 </script>
