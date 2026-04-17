@@ -167,7 +167,7 @@ const FINITION=[
   {id:'soigne',icon:'⭐',name:'Montage renforcé',desc:'Montage dynamique avec rendu travaillé. Ex : vidéo entreprise rythmée, aftermovie, vidéo tourisme, contenu réseaux soigné.'},
   {id:'premium',icon:'🏆',name:'Montage signature',desc:'Finition haut de gamme. Ex : film de marque, vidéo promotionnelle premium, création cinématique, rendu très soigné et léché.'},
 ];
-let S={step:1,ptype:'',desc:'',shootId:'',capType:'',livrable:'',preparation:'',finition:'',soustitres:false,drone:false,photo:false,photoH:'2',photoDur:'2',photoStyle:'',cadreur:false,dist:'',deliv:[],result:null,contactSent:false,loading:false,ct:{name:'',email:'',phone:'',msg:''}};
+let S={step:1,ptype:'',desc:'',shootId:'',capType:'',livrable:'',preparation:'',finition:'',soustitres:false,drone:false,photo:false,photoH:'2',photoDur:'2',photoStyle:'',cadreur:false,cadreurDur:'0.5',dist:'',deliv:[],result:null,contactSent:false,loading:false,ct:{name:'',email:'',phone:'',msg:''}};
 const isR=()=>S.ptype==='reseaux';
 const isVideo=()=>!isPhoto();
 const isPhoto=()=>S.ptype==='photo';
@@ -205,7 +205,8 @@ function r2(c){
   <button class="trow${S.cadreur?' on':''}" onclick="S.cadreur=!S.cadreur;render()">
     <span class="ti">🎥</span><div class="tt"><div class="tl">Cadreur supplémentaire</div><div class="ts">Second opérateur · 280 € HT / demi-journée</div></div>
     <div class="tdot${S.cadreur?' on':''}">✓</div>
-  </button>`;
+  </button>
+  ${S.cadreur?cadreurDurBlock():''}`;
 }
 function ppBtn(d,selClass,dotClass,onclick){const isS=S[selClass.key]===d.id;const badge=d.badge?`<div class="pp-badge">${d.badge}</div>`:'';return`<button class="pp-btn${isS?' '+selClass.cls:''}" onclick="${onclick}('${d.id}')"><span class="pp-icon">${d.icon}</span><div class="pp-body"><div class="pp-name">${d.name}</div><div class="pp-desc">${d.desc}</div>${isS&&d.badge?badge:(!isS&&d.badge?'':badge)}</div><div class="rdot${isS?' '+dotClass:''}"></div></button>`;}
 function r3(c){
@@ -238,6 +239,11 @@ function r4(c){
 function tr(k,icon,l,s){return`<button class="trow${S[k]?' on':''}" onclick="S['${k}']=!S['${k}'];render()"><span class="ti">${icon}</span><div class="tt"><div class="tl">${l}</div><div class="ts">${s}</div></div><div class="tdot${S[k]?' on':''}">✓</div></button>`;}
 function dr(id,l,p){return`<button class="drow${S.dist===id?' sel':''}" onclick="S.dist='${id}';render()"><span class="dl">${l}</span><span class="dp">${p}</span></button>`;}
 function tD(v){S.deliv=S.deliv.includes(v)?S.deliv.filter(d=>d!==v):[...S.deliv,v];render();}
+function cadreurDurBlock(){
+  const opts=[{id:'0.5',label:'½ j.',prix:280},{id:'1',label:'1 j.',prix:549},{id:'1.5',label:'1.5 j.',prix:829},{id:'2',label:'2 j.',prix:1099},{id:'3',label:'3 j.',prix:1649}];
+  const btns=opts.map(d=>`<button class="phbtn${S.cadreurDur===d.id?' on':''}" onclick="S.cadreurDur='${d.id}';render()">${d.label}<br><span style="font-size:10px">${d.prix}€</span></button>`).join('');
+  return `<div style="margin:0 0 8px 12px"><div style="font-size:11px;color:#888;margin-bottom:4px">Durée :</div><div class="phhours">${btns}</div></div>`;
+}
 function rNav(){const nb=document.createElement('div');nb.id='nb';nb.className='nav';if(S.step>1){const b=document.createElement('button');b.className='btn-back';b.textContent='← Retour';b.onclick=()=>{S.step--;render();};nb.appendChild(b);}const ok=canNext();const n=document.createElement('button');n.className=S.step<4?'btn-next go':'btn-next gen';n.disabled=!ok;n.textContent=S.step<4?'Continuer →':'✨ Voir mon estimation';n.onclick=S.step<4?()=>{S.step++;render();}:doGen;nb.appendChild(n);document.querySelector('.app').appendChild(nb);}
 function bPD(){if(isR()){const lm={'1film':'1 capsule unique','1film+':'1 capsule + déclinaisons','capsules':'Plusieurs capsules (2 ou plus)'};const fm={'standard':'finition standard','soigne':'finition soignée','premium':'finition premium'};return`${lm[S.livrable]||S.livrable}, ${fm[S.finition]||S.finition}${S.soustitres?', avec sous-titres':''}`;}const lm={'1film':'1 vidéo finale','1film+':'1 vidéo + déclinaisons','capsules':'Plusieurs vidéos distinctes'};const pm={'libre':"captation libre — beaucoup de rushes, dérush important, récit à construire. PAS d'écriture.",'trame':"trame générale — structure connue, montage fluide. PAS d'écriture.",'script':'script précis — peu de rushes, montage ciblé. INCLURE préprod/écriture 150€ HT absorbée dans le montage réduit.'};const fm={'standard':'finition standard','soigne':'finition soignée','premium':'finition premium (motion design)'};return`${lm[S.livrable]||S.livrable} | ${pm[S.preparation]||S.preparation} | ${fm[S.finition]||S.finition}${S.soustitres?' | + sous-titres (125€ HT)':''}`;}
 async function doGen(){
@@ -287,7 +293,7 @@ Exemples réels à respecter:
 - 3 capsules: tournage + 1.5dj postprod = 3×247€/2 = 370€ HT pour la postprod
 - Drone (249€) s'ajoute si coché
 
-PROJET: type=${S.ptype} | desc="${S.desc||''}" | tournage=${S.shootId} dj à 380€/dj | captation=${S.capType} | postprod="${bPD()}" | drone=${S.drone==='rural'?'Oui zone rurale 149€':S.drone==='urbain'?'Oui zone réglementée 249€':'Non'} | photo=${S.photo?S.photoH+'h à 97€/h':'Non'} | cadreur=${S.cadreur?'Oui 280€/dj':'Non'} | deplacement=${S.dist==='mid'?'50-100km 49€':S.dist==='long'?'100-200km 89€':S.dist==='vlong'?'>200km sur devis':'inclus <50km'} | livrables="${S.deliv.join(',')}"
+PROJET: type=${S.ptype} | desc="${S.desc||''}" | tournage=${S.shootId} dj à 380€/dj | captation=${S.capType} | postprod="${bPD()}" | drone=${S.drone==='rural'?'Oui zone rurale 149€':S.drone==='urbain'?'Oui zone réglementée 249€':'Non'} | photo=${S.photo?S.photoH+'h à 97€/h':'Non'} | cadreur=${S.cadreur?('Oui '+({'0.5':'½ journée 280€','1':'1 journée 540€','1.5':'1.5 journée 810€','2':'2 journées 1080€','3':'3 journées 1560€'}[S.cadreurDur]||'280€')):'Non'} | deplacement=${S.dist==='mid'?'50-100km 49€':S.dist==='long'?'100-200km 89€':S.dist==='vlong'?'>200km sur devis':'inclus <50km'} | livrables="${S.deliv.join(',')}"
 
 Réponds UNIQUEMENT en JSON valide sans markdown:
 {"resume":"2 phrases","lignes":[{"label":"...","detail":"...","ht":0}],"sous_total_ht":0,"tva":0,"total_ttc":0,"fourchette_basse":0,"fourchette_haute":0,"conseil":"1 conseil utile"}`;
@@ -371,7 +377,7 @@ async function doSend(){
     if(btn){btn.disabled=false;btn.textContent='📩 Envoyer ma demande';}
   }
 }
-function raz(){S={step:1,ptype:'',desc:'',shootId:'',capType:'',livrable:'',preparation:'',finition:'',soustitres:false,drone:false,photo:false,photoH:'2',photoDur:'2',photoStyle:'',cadreur:false,dist:'',deliv:[],result:null,contactSent:false,loading:false,ct:{name:'',email:'',phone:'',msg:''}};render();}
+function raz(){S={step:1,ptype:'',desc:'',shootId:'',capType:'',livrable:'',preparation:'',finition:'',soustitres:false,drone:false,photo:false,photoH:'2',photoDur:'2',photoStyle:'',cadreur:false,cadreurDur:'0.5',dist:'',deliv:[],result:null,contactSent:false,loading:false,ct:{name:'',email:'',phone:'',msg:''}};render();}
 render();
 </script>
 </body>
